@@ -8,10 +8,15 @@
 // Debug
 #include <pythonvk/debug/debugger.h>
 
+// Context
+#include <pythonvk/context/glfw_context.h>
+
 // Render
 #include <pythonvk/render/instance.h>
-#include <pythonvk/render/glfw_context.h>
 #include <pythonvk/render/surface.h>
 #include <pythonvk/render/window.h>
+
+// Device
+#include <pythonvk/device/physical_device.h>
 
 #endif
