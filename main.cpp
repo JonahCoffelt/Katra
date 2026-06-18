@@ -226,23 +226,19 @@ VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code
 class HelloTriangleApplication {
 public:
     void run() {
-        initWindow();
+        GLFWContext* context = new GLFWContext();
         initVulkan();
         mainLoop();
         cleanup();
+        delete context;
     }
 
 private:
-    GLFWwindow* window;
 
-    // Instance
+    Window* window;
     Instance* instance;
-
-    // Validation debug messenger
     Debugger* debugger;
-
-    // Surface
-    VkSurfaceKHR surface;
+    Surface* surface;
 
     // Device
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -281,21 +277,12 @@ private:
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
 
-    void initWindow() {
-        glfwInit();
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-    } 
-
     void initVulkan() {
         instance = new Instance();
-        if (enableValidationLayers) {
-            debugger = new Debugger(instance);
-        }
-        createSurface();
+        if (enableValidationLayers) { debugger = new Debugger(instance); }
+        window = new Window("PythonVK", WIDTH, HEIGHT);
+        surface = new Surface(instance, window);
+
         pickPhysicalDevice();
         createLogicalDevice();
         createSwapChain();
@@ -308,12 +295,6 @@ private:
         createSyncObjects();
     }
 
-    void createSurface() {
-        VkResult result = glfwCreateWindowSurface(instance->getHandle(), window, nullptr, &surface);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
-    }
 
     void pickPhysicalDevice() {
         // Get number of devices
@@ -326,7 +307,7 @@ private:
 
         // Loop through to find a suitable device
         for (const auto& device : devices) {
-            if (isDeviceSuitable(surface, device)) {
+            if (isDeviceSuitable(surface->getHandle(), device)) {
                 VkPhysicalDeviceProperties deviceProperties;
                 vkGetPhysicalDeviceProperties(device, &deviceProperties);
 
@@ -345,7 +326,7 @@ private:
 
     void createLogicalDevice() {
         // Find queue families
-        QueueFamilyIndices indices = findQueueFamilies(surface, physicalDevice);
+        QueueFamilyIndices indices = findQueueFamilies(surface->getHandle(), physicalDevice);
 
         // Get the unique queues
         std::set<uint32_t> uniqueQueueFamilies = {
@@ -380,14 +361,6 @@ private:
         createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
         createInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-        // // Not needed on newer versions of Vulkan, but set validation for legacy
-        // if (enableValidationLayers) {
-        //     createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        //     createInfo.ppEnabledLayerNames = validationLayers.data();
-        // } else {
-        //     createInfo.enabledLayerCount = 0;
-        // }
-
         // Create the logical device
         VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
         if (result != VK_SUCCESS) {
@@ -400,11 +373,11 @@ private:
     }
 
     void createSwapChain() {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(surface, physicalDevice);
+        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(surface->getHandle(), physicalDevice);
 
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
         VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-        VkExtent2D extent = chooseSwapExtent(window, swapChainSupport.capabilities);
+        VkExtent2D extent = chooseSwapExtent(window->getHandle(), swapChainSupport.capabilities);
 
         // We would like 1 more image than min to avoid waiting on driver operations
         uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
@@ -416,7 +389,7 @@ private:
         // Swap chain create info
         VkSwapchainCreateInfoKHR createInfo {};
         createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = surface;
+        createInfo.surface = surface->getHandle();
         createInfo.minImageCount = imageCount;
         createInfo.imageFormat = surfaceFormat.format;
         createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -425,7 +398,7 @@ private:
         createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
         // Get indices
-        QueueFamilyIndices indices = findQueueFamilies(surface, physicalDevice);
+        QueueFamilyIndices indices = findQueueFamilies(surface->getHandle(), physicalDevice);
         uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
         // If the families differ, it is easier to just use concurrent to avoid ownership chapters
@@ -737,7 +710,7 @@ private:
     }
 
     void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices = findQueueFamilies(surface, physicalDevice);
+        QueueFamilyIndices queueFamilyIndices = findQueueFamilies(surface->getHandle(), physicalDevice);
 
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -850,7 +823,7 @@ private:
     }
 
     void mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
+        while (!glfwWindowShouldClose(window->getHandle())) {
             glfwPollEvents();
             drawFrame();
         }
@@ -950,15 +923,10 @@ private:
         // Destroy logical device
         vkDestroyDevice(device, nullptr);
 
-        // Destroy the surface
-        vkDestroySurfaceKHR(instance->getHandle(), surface, nullptr);
-
-        // Destroy Vulkan instance
+        
+        delete surface;
+        delete window;
         delete instance;
-
-        // Destroy/Terminate glfw
-        glfwDestroyWindow(window);
-        glfwTerminate();
     }
 };
 

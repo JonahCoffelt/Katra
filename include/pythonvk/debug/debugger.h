@@ -6,7 +6,7 @@
 
 
 // Constants
-const std::vector<const char*> validationLayers = {
+const std::vector<const char*> VALIDATION_LAYERS = {
     "VK_LAYER_KHRONOS_validation"
 };
 
@@ -18,8 +18,11 @@ class Instance;
 // Class Declaration
 class Debugger {
     private:
-        Instance* instance;
         VkDebugUtilsMessengerEXT debugMessenger;
+        Instance* instance;
+
+        VkResult createDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* createInfo);
+        void destroyDebugUtilsMessengerEXT();
 
     public:
         Debugger(Instance* isntance);
@@ -27,8 +30,6 @@ class Debugger {
 
         inline VkDebugUtilsMessengerEXT getHandle() { return debugMessenger; }
         static VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo();
-        VkResult createDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* createInfo);
-        void destroyDebugUtilsMessengerEXT();
 };
 
 
@@ -40,7 +41,7 @@ inline bool checkValidationLayerSupport() {
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-    for (const char* layerName : validationLayers) {
+    for (const char* layerName : VALIDATION_LAYERS) {
         bool layerFound = false;
 
         for (const auto& layerProperties : availableLayers) {

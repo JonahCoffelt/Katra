@@ -11,29 +11,18 @@
 class Instance {
     private:
         VkInstance instance;
+        bool useValidation;
+
+        VkApplicationInfo getAppInfo(std::string name = "PythonVK", unsigned int variant = 0, unsigned int major_version = 1, unsigned int minor_version = 0, unsigned int patch = 0);
+        std::vector<const char*> getRequiredExtensions();
+        VkInstanceCreateInfo getInstanceCreateInfo(VkApplicationInfo& appInfo, std::vector<const char*>& extensions);
         
     public:
-        Instance();
+        Instance(std::string name = "PythonVK", bool useValidation = true, unsigned int variant = 0, unsigned int major_version = 1, unsigned int minor_version = 0, unsigned int patch = 0);
         ~Instance();
 
         inline VkInstance getHandle() { return instance; }
+
 };
-
-
-// Helper Functions
-
-inline std::vector<const char*> getRequiredExtensions() {
-    uint32_t glfwExtensionCount = 0;
-    const char** glfwExtensions;
-    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-    if (enableValidationLayers) {
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-    }
-
-    return extensions;
-} 
 
 #endif

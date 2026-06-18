@@ -22,10 +22,10 @@ if(NOT glfw3_FOUND)
 endif()
 
 # PythonVK
-add_library(pythonvk
-    src/render/instance.cpp
-    src/debug/debugger.cpp
+file(GLOB_RECURSE PYTHONVK_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
+add_library(pythonvk ${PYTHONVK_SOURCES})
 target_include_directories(pythonvk PUBLIC include)
 target_link_libraries(pythonvk PUBLIC Vulkan::Vulkan)
 if(glfw3_FOUND)
