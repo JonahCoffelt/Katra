@@ -10,12 +10,18 @@
 // Class Declaration
 class Instance {
     private:
-        VkInstance instance;
-        bool useValidation;
+        VkInstance instance = VK_NULL_HANDLE;
 
-        VkApplicationInfo getAppInfo(std::string name = "PythonVK", unsigned int variant = 0, unsigned int major_version = 1, unsigned int minor_version = 0, unsigned int patch = 0);
-        std::vector<const char*> getRequiredExtensions();
-        VkInstanceCreateInfo getInstanceCreateInfo(VkApplicationInfo& appInfo, std::vector<const char*>& extensions);
+        bool useValidation;
+        std::string applicationName;
+        VkApplicationInfo appInfo{};
+        std::vector<const char*> extensions;
+        VkInstanceCreateInfo createInfo{};
+        VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
+
+        void setAppInfo(std::string name = "PythonVK", unsigned int variant = 0, unsigned int major_version = 1, unsigned int minor_version = 0, unsigned int patch = 0);
+        void setRequiredExtensions();
+        void setInstanceCreateInfo();
         
     public:
         Instance(std::string name = "PythonVK", bool useValidation = true, unsigned int variant = 0, unsigned int major_version = 1, unsigned int minor_version = 0, unsigned int patch = 0);
