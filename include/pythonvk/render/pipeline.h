@@ -4,7 +4,7 @@
 // Includes
 #include <pythonvk/util/includes.h>
 #include <pythonvk/device/logical_device.h>
-
+#include <pythonvk/render/render_pass.h>
 
 // Class Declaration
 class Pipeline {
@@ -13,9 +13,10 @@ class Pipeline {
         VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 
         LogicalDevice* device;
+        RenderPass* renderPass;
 
     public:
-        Pipeline(LogicalDevice* device);
+        Pipeline(LogicalDevice* device, RenderPass* renderPass);
         ~Pipeline();
 };
 

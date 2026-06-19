@@ -4,7 +4,7 @@
  * @brief Construct a new Pipeline object
  * 
  */
-Pipeline::Pipeline(LogicalDevice* device): device(device) {
+Pipeline::Pipeline(LogicalDevice* device, RenderPass* renderPass): device(device), renderPass(renderPass) {
     // TODO: Implement
 }
 

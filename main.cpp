@@ -7,23 +7,6 @@ const std::vector<const char*> PREFERED_DEVICE_EXTENSIONS = {
     "VK_KHR_portability_subset"
 };
 
-static std::vector<char> readFile(const std::string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!");
-    }
-
-    size_t fileSize = (size_t) file.tellg();
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-    file.close();
-
-    return buffer;
-}
-
 bool isDeviceSuitable(PhysicalDevice& device) {
     if (!device.checkExtensionSupport(REQUIRED_DEVICE_EXTENSIONS)) {
         return false;
@@ -32,24 +15,6 @@ bool isDeviceSuitable(PhysicalDevice& device) {
         return false;
     }
     return device.hasGraphicsFamily() && device.hasPresentFamily();
-}
-
-VkShaderModule createShaderModule(VkDevice device, const std::vector<char>& code) {
-    
-    // Set creation info
-    VkShaderModuleCreateInfo createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-    // Create shader module
-    VkShaderModule shaderModule;
-    VkResult result = vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error("failed to create shader module!");
-    }
-
-    return shaderModule;
 }
 
 class HelloTriangleApplication {
@@ -132,26 +97,21 @@ private:
     }
 
     void createGraphicsPipeline() {
-        // Load code from byte files
-        auto vertShaderCode = readFile("shaders/shader.vert.spv");
-        auto fragShaderCode = readFile("shaders/shader.frag.spv");
-
-        // Create modules from code
-        VkShaderModule vertShaderModule = createShaderModule(logicalDevice->getHandle(), vertShaderCode);
-        VkShaderModule fragShaderModule = createShaderModule(logicalDevice->getHandle(), fragShaderCode);
+        ShaderModule vertShaderModule(logicalDevice, "shaders/shader.vert.spv");
+        ShaderModule fragShaderModule(logicalDevice, "shaders/shader.frag.spv");
 
         // Shader stage info for vertex shader
         VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
         vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = vertShaderModule;
+        vertShaderStageInfo.module = vertShaderModule.getHandle();
         vertShaderStageInfo.pName = "main";
 
         // Shader stage info for fragment shader
         VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
         fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
         fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShaderModule;
+        fragShaderStageInfo.module = fragShaderModule.getHandle();
         fragShaderStageInfo.pName = "main";
 
         // Create array of stages
@@ -284,11 +244,6 @@ private:
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to create graphics pipeline!");
         }
-
-        // Destroy modules
-        vkDestroyShaderModule(logicalDevice->getHandle(), fragShaderModule, nullptr);
-        vkDestroyShaderModule(logicalDevice->getHandle(), vertShaderModule, nullptr);
-
     }
 
     void createFramebuffers() {
