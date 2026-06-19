@@ -16,6 +16,7 @@
 #include <pythonvk/render/surface.h>
 #include <pythonvk/render/window.h>
 #include <pythonvk/render/swap_chain.h>
+#include <pythonvk/render/render_pass.h>
 
 // Device
 #include <pythonvk/device/physical_device.h>

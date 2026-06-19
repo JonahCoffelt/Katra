@@ -70,13 +70,11 @@ private:
     PhysicalDevice* physicalDevice;
     LogicalDevice* logicalDevice;
     SwapChain* swapChain;
+    RenderPass* renderPass;
 
     // Pipeline
     VkPipeline graphicsPipeline;
     VkPipelineLayout pipelineLayout;
-
-    // Render Pass
-    VkRenderPass renderPass;
 
     // Framebuffers
     std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -99,8 +97,8 @@ private:
         pickPhysicalDevice();
         logicalDevice = new LogicalDevice(physicalDevice, REQUIRED_DEVICE_EXTENSIONS, PREFERED_DEVICE_EXTENSIONS);
         swapChain = new SwapChain(physicalDevice, logicalDevice, surface);
+        renderPass = new RenderPass(logicalDevice, swapChain);
         
-        createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
         createCommandPool();
@@ -277,7 +275,7 @@ private:
         pipelineInfo.pColorBlendState = &colorBlending;
         pipelineInfo.pDynamicState = &dynamicState;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.renderPass = renderPass->getHandle();
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
         pipelineInfo.basePipelineIndex = -1; // Optional
@@ -293,59 +291,6 @@ private:
 
     }
 
-    void createRenderPass() {
-
-        // Attchement Description
-        VkAttachmentDescription colorAttachment{};
-        // Formatting
-        colorAttachment.format = swapChain->getSurfaceFormat().format;
-        // Multisample (none for now)
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        // Load and store ops
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        // Image layouts
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        // Attachment References
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        // Subpass
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-
-        // Subpass dependencies
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        // Render Pass
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-        VkResult result = vkCreateRenderPass(logicalDevice->getHandle(), &renderPassInfo, nullptr, &renderPass);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to create render pass!");
-        }
-    }
-
     void createFramebuffers() {
         swapChainFramebuffers.resize(swapChain->getImageCount());
 
@@ -357,7 +302,7 @@ private:
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.renderPass = renderPass->getHandle();
             framebufferInfo.attachmentCount = 1;
             framebufferInfo.pAttachments = attachments;
             framebufferInfo.width = swapChain->getExtent().width;
@@ -415,7 +360,7 @@ private:
         // Start a render pass
         VkRenderPassBeginInfo renderPassInfo{};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
+        renderPassInfo.renderPass = renderPass->getHandle();
         renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
         renderPassInfo.renderArea.offset = {0, 0};
         renderPassInfo.renderArea.extent = swapChain->getExtent();
@@ -572,8 +517,8 @@ private:
         // Destroy pipeline
         vkDestroyPipeline(logicalDevice->getHandle(), graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(logicalDevice->getHandle(), pipelineLayout, nullptr);
-        vkDestroyRenderPass(logicalDevice->getHandle(), renderPass, nullptr);
 
+        delete renderPass;
         delete swapChain;
         delete logicalDevice;
         delete physicalDevice;
