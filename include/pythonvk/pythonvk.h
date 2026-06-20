@@ -17,7 +17,7 @@
 #include <pythonvk/render/window.h>
 #include <pythonvk/render/swap_chain.h>
 #include <pythonvk/render/render_pass.h>
-#include <pythonvk/render/pipeline.h>
+#include <pythonvk/render/graphics_pipeline.h>
 #include <pythonvk/render/shader_module.h>
 
 // Device
