@@ -1,5 +1,5 @@
-#include <pythonvk/debug/debugger.h>
-#include <pythonvk/render/instance.h>
+#include <katra/debug/debugger.h>
+#include <katra/render/instance.h>
 
 /**
  * @brief Construct a new Debugger object

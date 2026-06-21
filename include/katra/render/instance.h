@@ -1,10 +1,10 @@
-#ifndef PYVK_INSTANCE_H
-#define PYVK_INSTANCE_H
+#ifndef KATRA_INSTANCE_H
+#define KATRA_INSTANCE_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/debug/debugger.h>
-#include <pythonvk/util/constants.h>
+#include <katra/util/includes.h>
+#include <katra/debug/debugger.h>
+#include <katra/util/constants.h>
 
 
 // Class Declaration
@@ -20,12 +20,12 @@ class Instance {
         VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
         uint32_t apiVersion;
         
-        void setAppInfo(std::string name = "PythonVK", uint32_t apiVersion = VK_API_VERSION_1_0);
+        void setAppInfo(std::string name = "Katra", uint32_t apiVersion = VK_API_VERSION_1_0);
         void setRequiredExtensions();
         void setInstanceCreateInfo();
         
     public:
-        Instance(std::string name = "PythonVK", bool useValidation = true, uint32_t apiVersion = VK_API_VERSION_1_0);
+        Instance(std::string name = "Katra", bool useValidation = true, uint32_t apiVersion = VK_API_VERSION_1_0);
         ~Instance();
 
         inline VkInstance getHandle() { return instance; }

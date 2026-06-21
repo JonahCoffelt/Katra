@@ -1,4 +1,4 @@
-#include <pythonvk/render/instance.h>
+#include <katra/render/instance.h>
 
 /**
  * @brief Construct a new Instance object
@@ -70,7 +70,7 @@ void Instance::setAppInfo(std::string name, uint32_t apiVersion) {
 
     appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = applicationName.c_str();
-    appInfo.pEngineName = "PythonVK";
+    appInfo.pEngineName = "Katra";
     appInfo.applicationVersion = 0;
     appInfo.engineVersion = 0;
     appInfo.apiVersion = apiVersion;

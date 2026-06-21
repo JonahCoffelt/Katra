@@ -1,10 +1,10 @@
-#ifndef PYTHONVK_RENDER_FRAMEBUFFER_H
-#define PYTHONVK_RENDER_FRAMEBUFFER_H
+#ifndef KATRA_RENDER_FRAMEBUFFER_H
+#define KATRA_RENDER_FRAMEBUFFER_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/render/render_pass.h>
-#include <pythonvk/render/swap_chain.h>
+#include <katra/util/includes.h>
+#include <katra/render/render_pass.h>
+#include <katra/render/swap_chain.h>
 
 
 // Class Declaration

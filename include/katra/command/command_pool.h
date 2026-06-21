@@ -1,8 +1,8 @@
-#ifndef PYTHONVK_COMMAND_POOL_H
-#define PYTHONVK_COMMAND_POOL_H
+#ifndef KATRA_COMMAND_POOL_H
+#define KATRA_COMMAND_POOL_H
 
-#include <pythonvk/util/includes.h>
-#include <pythonvk/device/logical_device.h>
+#include <katra/util/includes.h>
+#include <katra/device/logical_device.h>
 
 class CommandPool {
     private:

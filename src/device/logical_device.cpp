@@ -1,4 +1,4 @@
-#include <pythonvk/device/logical_device.h>
+#include <katra/device/logical_device.h>
 
 /**
  * @brief Construct a new LogicalDevice object

@@ -1,9 +1,9 @@
-#ifndef PYVK_SHADER_MODULE_H
-#define PYVK_SHADER_MODULE_H
+#ifndef KATRA_SHADER_MODULE_H
+#define KATRA_SHADER_MODULE_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/device/logical_device.h>
+#include <katra/util/includes.h>
+#include <katra/device/logical_device.h>
 
 
 // Class Declaration

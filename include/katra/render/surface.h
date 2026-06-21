@@ -1,10 +1,10 @@
-#ifndef PYVK_SURFACE_H
-#define PYVK_SURFACE_H
+#ifndef KATRA_SURFACE_H
+#define KATRA_SURFACE_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/render/instance.h>
-#include <pythonvk/render/window.h>
+#include <katra/util/includes.h>
+#include <katra/render/instance.h>
+#include <katra/render/window.h>
 
 
 // Class Declaration

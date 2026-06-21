@@ -1,8 +1,8 @@
-#ifndef PYVK_DEBUGGER_H
-#define PYVK_DEBUGGER_H
+#ifndef KATRA_DEBUGGER_H
+#define KATRA_DEBUGGER_H
 
 // Includes
-#include <pythonvk/util/includes.h>
+#include <katra/util/includes.h>
 
 
 // Constants

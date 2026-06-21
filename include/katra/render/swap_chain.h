@@ -1,12 +1,12 @@
-#ifndef PYVK_SWAP_CHAIN_H
-#define PYVK_SWAP_CHAIN_H
+#ifndef KATRA_SWAP_CHAIN_H
+#define KATRA_SWAP_CHAIN_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/render/window.h>
-#include <pythonvk/render/surface.h>
-#include <pythonvk/device/physical_device.h>
-#include <pythonvk/device/logical_device.h>
+#include <katra/util/includes.h>
+#include <katra/render/window.h>
+#include <katra/render/surface.h>
+#include <katra/device/physical_device.h>
+#include <katra/device/logical_device.h>
 
 // Class Declaration
 class SwapChain {

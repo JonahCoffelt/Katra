@@ -1,5 +1,5 @@
-#ifndef PYVK_CONSTANTS_H
-#define PYVK_CONSTANTS_H
+#ifndef KATRA_CONSTANTS_H
+#define KATRA_CONSTANTS_H
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 

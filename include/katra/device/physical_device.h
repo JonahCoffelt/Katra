@@ -1,10 +1,10 @@
-#ifndef PYVK_PHYSICAL_DEVICE_H
-#define PYVK_PHYSICAL_DEVICE_H
+#ifndef KATRA_PHYSICAL_DEVICE_H
+#define KATRA_PHYSICAL_DEVICE_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/render/instance.h>
-#include <pythonvk/render/surface.h>
+#include <katra/util/includes.h>
+#include <katra/render/instance.h>
+#include <katra/render/surface.h>
 
 
 // Helper Structs

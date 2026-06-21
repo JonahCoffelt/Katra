@@ -1,9 +1,9 @@
-#ifndef PYVK_LOGICAL_DEVICE_H
-#define PYVK_LOGICAL_DEVICE_H
+#ifndef KATRA_LOGICAL_DEVICE_H
+#define KATRA_LOGICAL_DEVICE_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/device/physical_device.h>
+#include <katra/util/includes.h>
+#include <katra/device/physical_device.h>
 
 
 // Class Declaration

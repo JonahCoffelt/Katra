@@ -1,4 +1,4 @@
-#include <pythonvk/pythonvk.h>
+#include <katra/katra.h>
 
 const std::vector<const char*> REQUIRED_DEVICE_EXTENSIONS = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -40,17 +40,15 @@ private:
     std::vector<Framebuffer*> swapChainFramebuffers;
     CommandPool* commandPool;
     std::vector<CommandBuffer*> commandBuffers;
-
-    // Synchronization Objects
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
+    std::vector<Semaphore*> imageAvailableSemaphores;
+    std::vector<Semaphore*> renderFinishedSemaphores;
+    std::vector<Fence*> inFlightFences;
     uint32_t currentFrame = 0;
 
     void initVulkan() {
         instance = new Instance();
         if (enableValidationLayers) { debugger = new Debugger(instance); }
-        window = new Window("PythonVK", 800, 600);
+        window = new Window("Katra", 800, 600);
         surface = new Surface(instance, window);
 
         pickPhysicalDevice();
@@ -109,43 +107,15 @@ private:
         }
     }
 
-    void recordCommandBuffer(CommandBuffer* commandBuffer, uint32_t imageIndex) {
-        commandBuffer->begin();
-        commandBuffer->beginRenderPass(renderPass, swapChainFramebuffers[imageIndex], {0.0f, 0.0f, 0.0f, 1.0f});
-        commandBuffer->bindPipeline(graphicsPipeline);
-        commandBuffer->setViewport(0.0f, 0.0f, static_cast<float>(swapChain->getExtent().width), static_cast<float>(swapChain->getExtent().height));
-        commandBuffer->setScissor(0, 0, swapChain->getExtent().width, swapChain->getExtent().height);
-        commandBuffer->draw(3, 1, 0, 0);
-        commandBuffer->endRenderPass();
-        commandBuffer->end();
-    }
-
     void createSyncObjects() {
-
-        // We want sync objects for each in frame
-        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(swapChain->getImageCount()); // need one for every image
-
-        VkSemaphoreCreateInfo semaphoreInfo{};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        VkFenceCreateInfo fenceInfo{};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;  // Allows the first frame to fall through
-
         // Create MAX_FRAMES_IN_FLIGHT imageAvailableSemaphores and inFlightFences
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(logicalDevice->getHandle(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(logicalDevice->getHandle(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create sync objects!");
-            }
+            inFlightFences.push_back(new Fence(logicalDevice, true));
+            imageAvailableSemaphores.push_back(new Semaphore(logicalDevice));
         }
         // Create swapChainImages.size() renderFinishedSemaphores
         for (size_t i = 0; i < swapChain->getImageCount(); i++) {
-            if (vkCreateSemaphore(logicalDevice->getHandle(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create renderFinished semaphores!");
-            }
+            renderFinishedSemaphores.push_back(new Semaphore(logicalDevice));
         }
     }
 
@@ -158,15 +128,26 @@ private:
         logicalDevice->waitIdle();
     }
 
+    void recordCommandBuffer(CommandBuffer* commandBuffer, uint32_t imageIndex) {
+        commandBuffer->begin();
+        commandBuffer->beginRenderPass(renderPass, swapChainFramebuffers[imageIndex], {0.0f, 0.0f, 0.0f, 1.0f});
+        commandBuffer->bindPipeline(graphicsPipeline);
+        commandBuffer->setViewport(0.0f, 0.0f, static_cast<float>(swapChain->getExtent().width), static_cast<float>(swapChain->getExtent().height));
+        commandBuffer->setScissor(0, 0, swapChain->getExtent().width, swapChain->getExtent().height);
+        commandBuffer->draw(3, 1, 0, 0);
+        commandBuffer->endRenderPass();
+        commandBuffer->end();
+    }
+
     void drawFrame() {
         // Make sure no other frame is rendering
-        vkWaitForFences(logicalDevice->getHandle(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+        inFlightFences[currentFrame]->wait();
         // Reset fence
-        vkResetFences(logicalDevice->getHandle(), 1, &inFlightFences[currentFrame]);
+        inFlightFences[currentFrame]->reset();
 
         // Aquire Image from swap chain
         uint32_t imageIndex;
-        vkAcquireNextImageKHR(logicalDevice->getHandle(), swapChain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        vkAcquireNextImageKHR(logicalDevice->getHandle(), swapChain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame]->getHandle(), VK_NULL_HANDLE, &imageIndex);
 
         // Record the command buffer
         commandBuffers[currentFrame]->reset();
@@ -176,7 +157,7 @@ private:
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         // Semaphores to wait on (wait for image to be available)
-        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]->getHandle()};
         submitInfo.pWaitSemaphores = waitSemaphores;
         submitInfo.waitSemaphoreCount = 1;
         // Use color attachment
@@ -185,12 +166,12 @@ private:
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffers[currentFrame]->getHandle();
         // Signal the render finished semaphore when complete
-        VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[imageIndex]};
+        VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[imageIndex]->getHandle()};
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
         // Use inFlightFence so the next frame will wait on this command queue
-        VkResult result = vkQueueSubmit(logicalDevice->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]);
+        VkResult result = vkQueueSubmit(logicalDevice->getGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]->getHandle());
         if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to submit draw command buffer!");
         }
@@ -219,11 +200,11 @@ private:
 
         // Destroy synchronization objects
         for (size_t i = 0; i < swapChain->getImageCount(); i++) {
-            vkDestroySemaphore(logicalDevice->getHandle(), renderFinishedSemaphores[i], nullptr);
+            delete renderFinishedSemaphores[i];
         }
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(logicalDevice->getHandle(), imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(logicalDevice->getHandle(), inFlightFences[i], nullptr);
+            delete inFlightFences[i];
+            delete imageAvailableSemaphores[i];
         }
         
         // Destroy all framebuffer (must happen before image pipeline destroy)

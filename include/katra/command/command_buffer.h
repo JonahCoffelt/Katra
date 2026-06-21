@@ -1,11 +1,11 @@
-#ifndef PYTHONVK_COMMAND_BUFFER_H
-#define PYTHONVK_COMMAND_BUFFER_H
+#ifndef KATRA_COMMAND_BUFFER_H
+#define KATRA_COMMAND_BUFFER_H
 
-#include <pythonvk/util/includes.h>
-#include <pythonvk/command/command_pool.h>
-#include <pythonvk/render/render_pass.h>
-#include <pythonvk/render/framebuffer.h>
-#include <pythonvk/render/graphics_pipeline.h>
+#include <katra/util/includes.h>
+#include <katra/command/command_pool.h>
+#include <katra/render/render_pass.h>
+#include <katra/render/framebuffer.h>
+#include <katra/render/graphics_pipeline.h>
 
 class CommandBuffer {
     private:

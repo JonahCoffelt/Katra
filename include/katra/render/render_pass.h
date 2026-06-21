@@ -1,10 +1,10 @@
-#ifndef PYVK_RENDER_PASS_H
-#define PYVK_RENDER_PASS_H
+#ifndef KATRA_RENDER_PASS_H
+#define KATRA_RENDER_PASS_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/device/logical_device.h>
-#include <pythonvk/render/swap_chain.h>
+#include <katra/util/includes.h>
+#include <katra/device/logical_device.h>
+#include <katra/render/swap_chain.h>
 
 
 // Class Declaration

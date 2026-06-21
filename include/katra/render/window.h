@@ -1,8 +1,8 @@
-#ifndef PYVK_WINDOW_H
-#define PYVK_WINDOW_H
+#ifndef KATRA_WINDOW_H
+#define KATRA_WINDOW_H
 
 // Includes
-#include <pythonvk/util/includes.h>
+#include <katra/util/includes.h>
 
 
 // Class Declaration

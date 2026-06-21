@@ -1,11 +1,11 @@
-#ifndef PYVK_PIPELINE_H
-#define PYVK_PIPELINE_H
+#ifndef KATRA_PIPELINE_H
+#define KATRA_PIPELINE_H
 
 // Includes
-#include <pythonvk/util/includes.h>
-#include <pythonvk/device/logical_device.h>
-#include <pythonvk/render/render_pass.h>
-#include <pythonvk/render/shader_module.h>
+#include <katra/util/includes.h>
+#include <katra/device/logical_device.h>
+#include <katra/render/render_pass.h>
+#include <katra/render/shader_module.h>
 
 
 // Class Declaration

@@ -1,4 +1,4 @@
-#include <pythonvk/command/command_pool.h>
+#include <katra/command/command_pool.h>
 
 CommandPool::CommandPool(LogicalDevice* device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags): device(device), queueFamilyIndex(queueFamilyIndex), flags(flags) {
     setCreateInfo();

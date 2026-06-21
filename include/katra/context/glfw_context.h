@@ -1,8 +1,8 @@
-#ifndef PYVK_GLFW_CONTEXT_H
-#define PYVK_GLFW_CONTEXT_H
+#ifndef KATRA_GLFW_CONTEXT_H
+#define KATRA_GLFW_CONTEXT_H
 
 // Includes
-#include <pythonvk/util/includes.h>
+#include <katra/util/includes.h>
 
 // Struct Declaration
 struct GLFWContext {

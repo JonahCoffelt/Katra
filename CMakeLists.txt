@@ -21,22 +21,22 @@ if(NOT glfw3_FOUND)
     pkg_check_modules(GLFW REQUIRED glfw3)
 endif()
 
-# PythonVK
-file(GLOB_RECURSE PYTHONVK_SOURCES CONFIGURE_DEPENDS
+# Katra
+file(GLOB_RECURSE KATRA_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
-add_library(pythonvk ${PYTHONVK_SOURCES})
-target_include_directories(pythonvk PUBLIC include)
-target_link_libraries(pythonvk PUBLIC Vulkan::Vulkan)
+add_library(katra ${KATRA_SOURCES})
+target_include_directories(katra PUBLIC include)
+target_link_libraries(katra PUBLIC Vulkan::Vulkan)
 if(glfw3_FOUND)
-    target_link_libraries(pythonvk PUBLIC glfw)
+    target_link_libraries(katra PUBLIC glfw)
 else()
-    target_include_directories(pythonvk PUBLIC ${GLFW_INCLUDE_DIRS})
-    target_link_libraries(pythonvk PUBLIC ${GLFW_LIBRARIES})
+    target_include_directories(katra PUBLIC ${GLFW_INCLUDE_DIRS})
+    target_link_libraries(katra PUBLIC ${GLFW_LIBRARIES})
 endif()
 
 add_executable(VulkanProject main.cpp)
-target_link_libraries(VulkanProject PRIVATE pythonvk)
+target_link_libraries(VulkanProject PRIVATE katra)
 
 # Platform-specific libs
 if(APPLE)
