@@ -38,10 +38,8 @@ private:
     RenderPass* renderPass;
     GraphicsPipeline* graphicsPipeline;
     std::vector<Framebuffer*> swapChainFramebuffers;
-
-    // Command Buffers
-    VkCommandPool commandPool;
-    std::vector<VkCommandBuffer> commandBuffers;
+    CommandPool* commandPool;
+    std::vector<CommandBuffer*> commandBuffers;
 
     // Synchronization Objects
     std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -62,8 +60,9 @@ private:
         renderPass = new RenderPass(logicalDevice, swapChain);
         graphicsPipeline = new GraphicsPipeline(logicalDevice, renderPass, "shaders/shader.vert.spv", "shaders/shader.frag.spv");
         createFramebuffers();
+
+        commandPool = new CommandPool(logicalDevice, logicalDevice->getGraphicsFamilyIndex());
         
-        createCommandPool();
         createCommandBuffers();
         createSyncObjects();
     }
@@ -102,88 +101,23 @@ private:
         }
     }
 
-    void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices = physicalDevice->getQueueFamilyIndices();
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-        VkResult result = vkCreateCommandPool(logicalDevice->getHandle(), &poolInfo, nullptr, &commandPool);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to create command pool!");
-        }
-    }
-
     void createCommandBuffers() {
         // Make buffers for each in flight frame
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
-
-        VkResult result = vkAllocateCommandBuffers(logicalDevice->getHandle(), &allocInfo, commandBuffers.data());
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate command buffers!");
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            commandBuffers[i] = new CommandBuffer(commandPool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
         }
     }
 
-    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = 0; // Optional
-        beginInfo.pInheritanceInfo = nullptr; // Optional
-
-        VkResult result = vkBeginCommandBuffer(commandBuffer, &beginInfo);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
-
-        // Start a render pass
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass->getHandle();
-        renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex]->getHandle();
-        renderPassInfo.renderArea.offset = {0, 0};
-        renderPassInfo.renderArea.extent = swapChain->getExtent();
-        
-        VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-        renderPassInfo.clearValueCount = 1;
-        renderPassInfo.pClearValues = &clearColor;
-
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        // Bind the graphics pipeline
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->getHandle());
-
-        // Since viewport and scisor are dynamic, they need to be defined here
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(swapChain->getExtent().width);
-        viewport.height = static_cast<float>(swapChain->getExtent().height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-        VkRect2D scissor{};
-        scissor.offset = {0, 0};
-        scissor.extent = swapChain->getExtent();
-        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-        vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-        // End pass
-        vkCmdEndRenderPass(commandBuffer);
-
-        result = vkEndCommandBuffer(commandBuffer);
-        if (result != VK_SUCCESS) {
-            throw std::runtime_error("failed to record command buffer!");
-        }
+    void recordCommandBuffer(CommandBuffer* commandBuffer, uint32_t imageIndex) {
+        commandBuffer->begin();
+        commandBuffer->beginRenderPass(renderPass, swapChainFramebuffers[imageIndex], {0.0f, 0.0f, 0.0f, 1.0f});
+        commandBuffer->bindPipeline(graphicsPipeline);
+        commandBuffer->setViewport(0.0f, 0.0f, static_cast<float>(swapChain->getExtent().width), static_cast<float>(swapChain->getExtent().height));
+        commandBuffer->setScissor(0, 0, swapChain->getExtent().width, swapChain->getExtent().height);
+        commandBuffer->draw(3, 1, 0, 0);
+        commandBuffer->endRenderPass();
+        commandBuffer->end();
     }
 
     void createSyncObjects() {
@@ -235,7 +169,7 @@ private:
         vkAcquireNextImageKHR(logicalDevice->getHandle(), swapChain->getHandle(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
         // Record the command buffer
-        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+        commandBuffers[currentFrame]->reset();
         recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
         // Submit the command buffer
@@ -249,7 +183,7 @@ private:
         VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
         submitInfo.pWaitDstStageMask = waitStages;
         submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
+        submitInfo.pCommandBuffers = &commandBuffers[currentFrame]->getHandle();
         // Signal the render finished semaphore when complete
         VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[imageIndex]};
         submitInfo.signalSemaphoreCount = 1;
@@ -291,15 +225,17 @@ private:
             vkDestroySemaphore(logicalDevice->getHandle(), imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(logicalDevice->getHandle(), inFlightFences[i], nullptr);
         }
-
-        // Destroy command buffers
-        vkDestroyCommandPool(logicalDevice->getHandle(), commandPool, nullptr);
-
+        
         // Destroy all framebuffer (must happen before image pipeline destroy)
         for (auto framebuffer : swapChainFramebuffers) {
             delete framebuffer;
         }
-
+        
+        for (auto commandBuffer : commandBuffers) {
+            delete commandBuffer;
+        }
+        
+        delete commandPool;
         delete graphicsPipeline;
         delete renderPass;
         delete swapChain;

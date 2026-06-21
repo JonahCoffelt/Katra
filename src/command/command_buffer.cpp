@@ -1,0 +1,94 @@
+#include <pythonvk/command/command_buffer.h>
+
+CommandBuffer::CommandBuffer(CommandPool* pool, VkCommandBufferLevel level): pool(pool), level(level) {
+    device = pool->getDevice();
+    setCreateInfo();
+
+    VkResult result = vkAllocateCommandBuffers(device->getHandle(), &createInfo, &commandBuffer);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate command buffer!");
+    }
+}
+
+void CommandBuffer::setCreateInfo() {
+    createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    createInfo.commandPool = pool->getHandle();
+    createInfo.level = level;
+    createInfo.commandBufferCount = 1;
+}
+
+void CommandBuffer::begin() {
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = 0; // Optional
+    beginInfo.pInheritanceInfo = nullptr; // Optional
+
+    VkResult result = vkBeginCommandBuffer(commandBuffer, &beginInfo);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to begin recording command buffer!");
+    }
+}
+
+void CommandBuffer::end() {
+    VkResult result = vkEndCommandBuffer(commandBuffer);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to end recording command buffer!");
+    }
+}
+
+void CommandBuffer::beginRenderPass(RenderPass* renderPass, Framebuffer* framebuffer, std::vector<float> clearColor, VkSubpassContents subpassContents) {
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPass->getHandle();
+    renderPassInfo.framebuffer = framebuffer->getHandle();
+    renderPassInfo.renderArea.offset = {0, 0};
+    renderPassInfo.renderArea.extent = framebuffer->getExtent();
+    
+    VkClearValue clearValue = {{{clearColor[0], clearColor[1], clearColor[2], clearColor[3]}}};
+    renderPassInfo.clearValueCount = 1;
+    renderPassInfo.pClearValues = &clearValue;
+
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, subpassContents);
+}
+
+void CommandBuffer::endRenderPass() {
+    vkCmdEndRenderPass(commandBuffer);
+}
+
+void CommandBuffer::bindPipeline(GraphicsPipeline* pipeline) {
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->getHandle());
+}
+
+void CommandBuffer::setViewport(float x, float y, float width, float height, float minDepth, float maxDepth) {
+    VkViewport viewport{};
+    viewport.x = x;
+    viewport.y = y;
+    viewport.width = width;
+    viewport.height = height;
+    viewport.minDepth = minDepth;
+    viewport.maxDepth = maxDepth;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+}
+
+void CommandBuffer::setScissor(int32_t x, int32_t y, uint32_t width, uint32_t height) {
+    VkRect2D scissor{};
+    scissor.offset = {x, y};
+    scissor.extent = {width, height};
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+}
+
+void CommandBuffer::draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) {
+    vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
+void CommandBuffer::reset() {
+    VkResult result = vkResetCommandBuffer(commandBuffer, 0);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("failed to reset command buffer!");
+    }
+}
+
+CommandBuffer::~CommandBuffer() {
+    vkFreeCommandBuffers(device->getHandle(), pool->getHandle(), 1, &commandBuffer);
+}
