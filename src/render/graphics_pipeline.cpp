@@ -4,7 +4,7 @@
  * @brief Construct a new Graphics Pipeline object
  * 
  */
-GraphicsPipeline::GraphicsPipeline(LogicalDevice* device, RenderPass* renderPass, std::string vertShaderPath, std::string fragShaderPath): device(device), renderPass(renderPass) {
+GraphicsPipeline::GraphicsPipeline(RenderPass* renderPass, std::string vertShaderPath, std::string fragShaderPath): device(renderPass->getDevice()), renderPass(renderPass) {
     
     // Create shader modules
     vertShaderModule = new ShaderModule(device, vertShaderPath);

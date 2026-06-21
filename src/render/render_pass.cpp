@@ -4,7 +4,7 @@
  * @brief Construct a new Render Pass object
  * 
  */
-RenderPass::RenderPass(LogicalDevice* device, SwapChain* swapChain): device(device), swapChain(swapChain) {
+RenderPass::RenderPass(SwapChain* swapChain): device(swapChain->getLogicalDevice()), swapChain(swapChain) {
     // Set the attachment description, reference, subpass description, and subpass dependency
     setAttachmentDescription();
     setAttachmentReference();

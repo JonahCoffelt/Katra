@@ -42,7 +42,6 @@ class SwapChain {
 
     public:
         SwapChain(
-            PhysicalDevice* physicalDevice, 
             LogicalDevice* logicalDevice, 
             Surface* surface, 
             VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR, 

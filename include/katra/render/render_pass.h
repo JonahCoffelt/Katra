@@ -27,7 +27,7 @@ class RenderPass {
         void setSubpassDependency();
 
     public:
-        RenderPass(LogicalDevice* device, SwapChain* swapChain);
+        RenderPass(SwapChain* swapChain);
         ~RenderPass();
         RenderPass(const RenderPass&) = delete;
         RenderPass& operator=(const RenderPass&) = delete;

@@ -46,7 +46,7 @@ class GraphicsPipeline {
         void setPipelineInfo();
 
     public:
-        GraphicsPipeline(LogicalDevice* device, RenderPass* renderPass, std::string vertShaderPath, std::string fragShaderPath);
+        GraphicsPipeline(RenderPass* renderPass, std::string vertShaderPath, std::string fragShaderPath);
         ~GraphicsPipeline();
         GraphicsPipeline(const GraphicsPipeline&) = delete;
         GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;

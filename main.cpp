@@ -51,9 +51,9 @@ private:
         pickPhysicalDevice();
         logicalDevice = new LogicalDevice(physicalDevice, REQUIRED_DEVICE_EXTENSIONS, PREFERED_DEVICE_EXTENSIONS);
         
-        swapChain = new SwapChain(physicalDevice, logicalDevice, surface);
-        renderPass = new RenderPass(logicalDevice, swapChain);
-        graphicsPipeline = new GraphicsPipeline(logicalDevice, renderPass, "shaders/shader.vert.spv", "shaders/shader.frag.spv");
+        swapChain = new SwapChain(logicalDevice, surface);
+        renderPass = new RenderPass(swapChain);
+        graphicsPipeline = new GraphicsPipeline(renderPass, "shaders/shader.vert.spv", "shaders/shader.frag.spv");
         createFramebuffers();
 
         commandPool = new CommandPool(logicalDevice, logicalDevice->getGraphicsFamilyIndex());
