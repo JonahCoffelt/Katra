@@ -78,14 +78,22 @@ void CommandBuffer::setScissor(int32_t x, int32_t y, uint32_t width, uint32_t he
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
-void CommandBuffer::draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) {
-    vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
-}
-
 void CommandBuffer::bindVertexBuffer(Buffer* buffer, uint32_t binding, uint32_t offset) {
     VkBuffer buffers[] = {buffer->getHandle()};
     VkDeviceSize offsets[] = {offset};
     vkCmdBindVertexBuffers(commandBuffer, binding, 1, buffers, offsets);
+}
+
+void CommandBuffer::bindIndexBuffer(Buffer* buffer, uint32_t offset) {
+    vkCmdBindIndexBuffer(commandBuffer, buffer->getHandle(), offset, VK_INDEX_TYPE_UINT16);
+}
+
+void CommandBuffer::draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) {
+    vkCmdDraw(commandBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
+void CommandBuffer::drawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, uint32_t vertexOffset, uint32_t firstInstance) {
+    vkCmdDrawIndexed(commandBuffer, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 }
 
 void CommandBuffer::copyBuffer(Buffer* src, Buffer* dst, uint32_t size, uint32_t srcOffset, uint32_t dstOffset) {

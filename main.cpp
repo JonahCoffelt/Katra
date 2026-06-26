@@ -13,9 +13,14 @@ const std::vector<const char*> PREFERED_DEVICE_EXTENSIONS = {
 };
 
 const std::vector<Vertex> vertices = {
-    {{0.0f, -0.5f}, {1.0f, 1.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+};
+
+const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0
 };
 
 bool isDeviceSuitable(PhysicalDevice& device) {
@@ -55,7 +60,7 @@ private:
 
     VertexInput* vertexInput;
     Buffer* vertexBuffer;
-    Buffer* stagingBuffer;
+    Buffer* indexBuffer;
 
     void initVulkan() {
         instance = new Instance("Katra", enableValidationLayers, VK_API_VERSION_1_2);
@@ -79,13 +84,11 @@ private:
         createCommandBuffers();
         createSyncObjects();
 
-        stagingBuffer = new Buffer(
-            logicalDevice, 
-            sizeof(vertices[0]) * vertices.size(), 
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-        );
-        stagingBuffer->write(vertices.data(), sizeof(vertices[0]) * vertices.size());
+        createBuffers();
+    }
+
+    void createBuffers() {
+        // Create vertex buffer
         vertexBuffer = new Buffer(
             logicalDevice, 
             sizeof(vertices[0]) * vertices.size(), 
@@ -93,12 +96,51 @@ private:
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
         );
 
+        // Write vertex data to staging buffer
+        Buffer* stagingBuffer = new Buffer(
+            logicalDevice, 
+            sizeof(vertices[0]) * vertices.size(), 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+        stagingBuffer->write(vertices.data(), sizeof(vertices[0]) * vertices.size());
+
         // Copy staging buffer to vertex
         CommandBuffer* copyCommand = new CommandBuffer(commandPool);
         copyCommand->begin();
         copyCommand->copyBuffer(stagingBuffer, vertexBuffer, sizeof(vertices[0]) * vertices.size());
         copyCommand->end();
         copyCommand->submit(logicalDevice->getGraphicsQueue());
+        logicalDevice->waitIdle();
+        delete stagingBuffer;
+        delete copyCommand;
+
+        // Create index buffer
+        indexBuffer = new Buffer(
+            logicalDevice, 
+            sizeof(indices[0]) * indices.size(), 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        );
+
+        // Write index data to staging buffer
+        stagingBuffer = new Buffer(
+            logicalDevice, 
+            sizeof(indices[0]) * indices.size(), 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        );
+        stagingBuffer->write(indices.data(), sizeof(indices[0]) * indices.size());
+
+        // Copy staging buffer to index
+        copyCommand = new CommandBuffer(commandPool);
+        copyCommand->begin();
+        copyCommand->copyBuffer(stagingBuffer, indexBuffer, sizeof(indices[0]) * indices.size());
+        copyCommand->end();
+        copyCommand->submit(logicalDevice->getGraphicsQueue());
+        logicalDevice->waitIdle();
+        delete stagingBuffer;
+        delete copyCommand;
     }
 
     void pickPhysicalDevice() {
@@ -187,7 +229,8 @@ private:
         commandBuffer->setViewport(0.0f, 0.0f, static_cast<float>(swapChain->getExtent().width), static_cast<float>(swapChain->getExtent().height));
         commandBuffer->setScissor(0, 0, swapChain->getExtent().width, swapChain->getExtent().height);
         commandBuffer->bindVertexBuffer(vertexBuffer, 0, 0);
-        commandBuffer->draw(3, 1, 0, 0);
+        commandBuffer->bindIndexBuffer(indexBuffer);
+        commandBuffer->drawIndexed(static_cast<uint32_t>(indices.size()));
         commandBuffer->endRenderPass();
         commandBuffer->end();
 
@@ -224,7 +267,7 @@ private:
         }
 
         delete vertexBuffer;
-        delete stagingBuffer;
+        delete indexBuffer;
         delete vertexInput;
         delete commandPool;
         delete graphicsPipeline;
