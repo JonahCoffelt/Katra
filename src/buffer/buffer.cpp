@@ -35,12 +35,23 @@ void Buffer::setCreateInfo() {
 }
 
 void Buffer::write(const void* data, uint32_t size, uint32_t offset) {
-    if (!mapped) {
-        vkMapMemory(device->getHandle(), allocation->getHandle(), 0, size, 0, &mappedMemory);
+    if (offset + size > this->size) {
+        throw std::runtime_error("buffer write out of bounds!");
     }
-    memcpy((char*)mappedMemory + offset, data, size);
-    if (!mapped) {
+
+    const bool temporarilyMapped = !mapped;
+    if (temporarilyMapped) {
+        VkResult result = vkMapMemory(device->getHandle(), allocation->getHandle(), 0, this->size, 0, &mappedMemory);
+        if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to map buffer memory!");
+        }
+    }
+
+    memcpy(static_cast<char*>(mappedMemory) + offset, data, size);
+
+    if (temporarilyMapped) {
         vkUnmapMemory(device->getHandle(), allocation->getHandle());
+        mappedMemory = nullptr;
     }
 }
 

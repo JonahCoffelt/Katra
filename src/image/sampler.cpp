@@ -11,7 +11,7 @@ Sampler::Sampler(
 
     // Get device anisotropy limit
     float anisotropyLimit = device->getPhysicalDevice()->getLimits().maxSamplerAnisotropy;
-    anisotropy = std::min(anisotropy, anisotropyLimit);
+    this->anisotropy = std::min(anisotropy, anisotropyLimit);
 
     // Set the create info
     setCreateInfo();
